@@ -203,83 +203,23 @@ gggap <- function(plot, ylim, segments, tick_width, rel_heights,
 
   # plotting must be done in three stages
   # one for each segment from bottom to top
-  for (i in seq_len(length(segments))) {
-    gap <- unlist(segments[i])
-    # the bottom part must be plotted first
-    if (i == 1) {
-      if (ascending_ylimit) {
-        breaks <- seq(ylim[1], gap[1], by = tick_width[i])
-      } else if (!ascending_ylimit) {
-        breaks <- seq(gap[1], ylim[1], by = tick_width[i])
-      }
-      p_segment_i <- plot +
-      coord_cartesian(ylim = c(ylim[1], gap[1])) +
-      theme(panel.border = element_blank()) +
-      theme(axis.line.y = element_line(),
-            axis.line.x.bottom = element_line(),
-            plot.title = element_blank(),
-            legend.position = "none"
-            # ,strip.text.x = element_blank() # fix, line removed
-            ) +
-      scale_y_continuous(expand = c(0, 0),
-                         breaks = breaks,
-                         trans = trans) +
-      ylab(label = NULL)
-      p_segment <- list(p_segment_i)
-      names(p_segment)[length(p_segment)] <- i
-      rel_heigh <- c(y_heights[i], seg_heights[i])
-    } else {
-      # plot the median part
-      if (ascending_ylimit) {
-        breaks <- seq(ylim[1], gap[1], by = tick_width[i])
-      } else if (!ascending_ylimit) {
-        breaks <- seq(gap[1], ylim[1], by = tick_width[i])
-      }
-      p_segment_i <- plot +
-      coord_cartesian(ylim = c(unlist(segments[i - 1])[2], gap[1])) +
-      theme(panel.border = element_blank()) +
-      theme(axis.line.y = element_line(),
-            legend.position = "none",
-            axis.text.x = element_blank(),
-            axis.ticks.x = element_blank(),
-            title = element_blank(),
-            axis.title.x = element_blank()
-            # ,strip.text.x = element_blank() # fix, line removed
-            ) +
-      scale_y_continuous(expand = c(0, 0),
-                         breaks = breaks,
-                         trans = trans) +
-      ylab(label = NULL)
-      # add y label in the middle median part
-      p_segment <- c(p_segment, list(NULL), list(p_segment_i))
-      names(p_segment)[length(p_segment)] <- i
-      rel_heigh <- c(rel_heigh, y_heights[i], seg_heights[i])
-    }
-    # plot the toppest part in the end
-    if (i == length(segments)) {
-      if (ascending_ylimit) {
-        breaks <- seq(gap[2], ylim[2], by = tick_width[i + 1])
-      } else if (!ascending_ylimit) {
-        breaks <- seq(ylim[2], gap[2], by = tick_width[i + 1])
-      }
-      p_segment_i <- plot +
-      coord_cartesian(ylim = c(gap[2], ylim[2])) +
-      theme(panel.border = element_blank()) +
-      theme(axis.line.y = element_line(),
-            axis.line.x.top = element_line(),
-            legend.position = "none",
-            axis.text.x = element_blank(),
-            axis.ticks.x = element_blank(),
-            axis.title.x = element_blank()) +
-      scale_y_continuous(expand = c(0, 0),
-                         breaks = breaks,
-                         trans = trans) +
-      ylab(label = NULL)
-      p_segment <- c(p_segment, list(NULL), list(p_segment_i))
-      names(p_segment)[length(p_segment)] <- i + 1
-      rel_heigh <- c(rel_heigh, y_heights[i])
-    }
+  p_segment <- plot_bottom(plot, ascending_ylimit, ylim[1],
+                           unlist(segments[1])[1],
+                           tick_width[1], trans)
+  rel_height <- c(y_heights[1], seg_heights[1])
+
+  for (i in 2:length(segments) - 1) {
+    p_segment <- plot_midd(plot, i, ascending_ylimit, ylim[1],
+                          unlist(segments[i])[1], tick_width[i],
+                          segments, trans, p_segment)
+    rel_height <- c(rel_height, y_heights[i], seg_heights[i])
   }
+
+  p_segment <- plot_top(plot, length(segments), ascending_ylimit, ylim[2],
+                        unlist(segments[length(segments)])[2],
+                        tick_width[length(segments) + 1], segments,
+                        trans, p_segment)
+  rel_heigh <- c(rel_heigh, y_heights[length(segments)])
 
   # this does not seem to be used `num_parts <- length(p_segment)`
   # main fix start
@@ -319,4 +259,77 @@ gggap <- function(plot, ylim, segments, tick_width, rel_heights,
              angle = angle,
              lineheight = plot$theme$axis.title.y$lineheight,
              colour = plot$theme$axis.title.y$colour)
+}
+
+plot_bottom <- function(plot, ascending_ylimit, ylim, gap, tick_width, trans) {
+      if (ascending_ylimit) {
+    breaks <- seq(ylim, gap, by = tick_width)
+      } else if (!ascending_ylimit) {
+    breaks <- seq(gap, ylim, by = tick_width)
+      }
+      p_segment_i <- plot +
+  coord_cartesian(ylim = c(ylim, gap)) +
+      theme(panel.border = element_blank()) +
+      theme(axis.line.y = element_line(),
+            axis.line.x.bottom = element_line(),
+            plot.title = element_blank(),
+        legend.position = "none") +
+      scale_y_continuous(expand = c(0, 0),
+                         breaks = breaks,
+                         trans = trans) +
+      ylab(label = NULL)
+      p_segment <- list(p_segment_i)
+  names(p_segment)[length(p_segment)] <- 1
+  return(p_segment)
+}
+
+plot_midd <- function(plot, i, ascending_ylimit, ylim, gap, tick_width,
+  segments, trans, p_segment) {
+      if (ascending_ylimit) {
+    breaks <- seq(ylim, gap, by = tick_width)
+      } else if (!ascending_ylimit) {
+    breaks <- seq(gap, ylim, by = tick_width)
+      }
+      p_segment_i <- plot +
+  coord_cartesian(ylim = c(unlist(segments[i - 1])[2], gap)) +
+      theme(panel.border = element_blank()) +
+      theme(axis.line.y = element_line(),
+            legend.position = "none",
+            axis.text.x = element_blank(),
+            axis.ticks.x = element_blank(),
+            title = element_blank(),
+        axis.title.x = element_blank()) +
+      scale_y_continuous(expand = c(0, 0),
+                         breaks = breaks,
+                         trans = trans) +
+      ylab(label = NULL)
+      # add y label in the middle median part
+      p_segment <- c(p_segment, list(NULL), list(p_segment_i))
+      names(p_segment)[length(p_segment)] <- i
+  return(p_segment)
+    }
+
+plot_top <- function(plot, i, ascending_ylimit, ylim, gap, tick_width,
+  segments, trans, p_segment) {
+      if (ascending_ylimit) {
+    breaks <- seq(gap, ylim, by = tick_width)
+      } else if (!ascending_ylimit) {
+    breaks <- seq(ylim, gap, by = tick_width)
+      }
+      p_segment_i <- plot +
+  coord_cartesian(ylim = c(gap, ylim)) +
+      theme(panel.border = element_blank()) +
+      theme(axis.line.y = element_line(),
+            axis.line.x.top = element_line(),
+            legend.position = "none",
+            axis.text.x = element_blank(),
+            axis.ticks.x = element_blank(),
+            axis.title.x = element_blank()) +
+      scale_y_continuous(expand = c(0, 0),
+                         breaks = breaks,
+                         trans = trans) +
+      ylab(label = NULL)
+      p_segment <- c(p_segment, list(NULL), list(p_segment_i))
+      names(p_segment)[length(p_segment)] <- i + 1
+  return(p_segment)
 }
