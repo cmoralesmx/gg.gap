@@ -185,21 +185,9 @@ gg.gap <- function(plot,ylim,segments,tick_width,rel_heights,vjust=0,margin=c(to
                 theme(axis.line.y=element_line(),
                       axis.line.x.bottom = element_line(),
                       plot.title = element_blank(),
-                      legend.position = "none",
-                      strip.text.x = element_blank())+
-                scale_y_continuous(expand = c(0,0),
-                                   trans = trans,
-                                   breaks = breaks)+
-                ylab(label=NULL)
-            p_segment=list(p_segment.i)
-            names(p_segment)[length(p_segment)]=i
-            rel_heigh=c(y_heights[i],seg_heights[i])
-        }else{
-            #plot the median part
-            if (ylim[1] < ylim[2]){
-                breaks=seq(ylim[1],gap[1],by=tick_width[i])
-            }else if (ylim[1] > ylim[2]){
-                breaks=seq(gap[1],ylim[1],by=tick_width[i])
+            legend.position = "none"
+            # ,strip.text.x = element_blank() # fix, line removed
+            ) +
             }
             p_segment.i<-plot+
                 coord_cartesian(ylim=c(unlist(segments[i-1])[2],
@@ -211,9 +199,9 @@ gg.gap <- function(plot,ylim,segments,tick_width,rel_heights,vjust=0,margin=c(to
                       axis.text.x=element_blank(),
                       axis.ticks.x =element_blank(),
                       title = element_blank(),
-                      axis.title.x=element_blank(),
-                      strip.text.x = element_blank())+
-                scale_y_continuous(expand = c(0,0),
+            axis.title.x = element_blank()
+            # ,strip.text.x = element_blank() # fix, line removed
+            ) + 
                                    breaks = breaks,
                                    trans = trans)+
                 ylab(label=NULL)
@@ -249,12 +237,16 @@ gg.gap <- function(plot,ylim,segments,tick_width,rel_heights,vjust=0,margin=c(to
             rel_heigh=c(rel_heigh,y_heights[i])
         }
     }
-    #reverse order
-    p_segment=rev(p_segment)
-    if (missing(rel_heights)){
-        rel_heights=rev(rel_heigh)
-    }else{
-        rel_heights=rev(rel_heights)
+  # main fix start
+  num_parts <- length(p_segment) # fix
+  sbt <- p_segment[[1]]$labels$subtitle #fix
+  p_segment <- purrr::map(p_segment, ~ if(is.ggplot(.)) {.+labs(subtitle=NULL)} else {NULL}) # fix
+  
+  # reverse order
+  p_segment = rev(p_segment)
+
+  p_segment[[1]]$labels$subtitle <- sbt # fix
+  # main fix ends
     }
     if (is.null(plot$theme$axis.title.y$angle)) {
         angle=90
