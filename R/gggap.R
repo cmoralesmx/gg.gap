@@ -78,20 +78,17 @@ gggap <- function(plot, ylim, segments, tick_width, rel_heights,
     seg2 <- segments[[j]][2]
     if (seg1 > seg2) {
       if (ascending_ylimit) {
-        msg <- paste0("No.", j, " segment: c(", seg1, ",", seg2,
-                      ") is wrong. It should be ", "c(", seg2, ",", seg1, ")")
-        stop(msg)
+        stop(paste0("No.", j, " segment: c(", seg1, ",", seg2,
+                    ") is wrong. It should be ", "c(", seg2, ",", seg1, ")"))
       }
     } else if (seg1 < seg2) {
       if (!ascending_ylimit) {
-        msg <- paste0("No.", j, " segment: c(", seg1, ",", seg2,
-                      ") is wrong. It should be ", "c(", seg2, ",", seg1, ")")
-        stop(msg)
+        stop(paste0("No.", j, " segment: c(", seg1, ",", seg2,
+                    ") is wrong. It should be ", "c(", seg2, ",", seg1, ")"))
       }
     } else {
-      msg <- paste0("No.", j, " segment: c(", seg1, ",", seg2,
-                    ") is wrong. They must not be the same")
-      stop(msg)
+      stop(paste0("No.", j, " segment: c(", seg1, ",", seg2,
+                  ") is wrong. They must not be the same"))
     }
   }
   # the paired sequence of `segments` must follow to the ordering of `ylims`
@@ -104,9 +101,8 @@ gggap <- function(plot, ylim, segments, tick_width, rel_heights,
           pre <- paste0("c(", segments[[k - 1]][1], ",", segments[[k - 1]][2],
                         ")")
           suf <- paste0("c(", segments[[k]][1], ",", segments[[k]][2], ")")
-          msg <- paste0("Segments ", k - 1, " and ", k, ": ", pre, ",", suf,
-                        " are wrong. They should be ", suf, ",", pre)
-          stop(msg)
+          stop(paste0("Segments ", k - 1, " and ", k, ": ", pre, ",", suf,
+                      " are wrong. They should be ", suf, ",", pre))
         }
       }
     } else if (!ascending_ylimit) {
@@ -117,9 +113,8 @@ gggap <- function(plot, ylim, segments, tick_width, rel_heights,
           pre <- paste0("c(", segments[[k - 1]][1], ",", segments[[k - 1]][2],
                         ")")
           suf <- paste0("c(", segments[[k]][1], ",", segments[[k]][2], ")")
-          msg <- paste0("Segments ", k - 1, " and ", k, ": ", pre, ",", suf,
-                        " are wrong. They should be ", suf, ",", pre)
-          stop(msg)
+          stop(paste0("Segments ", k - 1, " and ", k, ": ", pre, ",", suf,
+                      " are wrong. They should be ", suf, ",", pre))
         }
       }
     }
@@ -185,19 +180,15 @@ gggap <- function(plot, ylim, segments, tick_width, rel_heights,
   # `ylim` cannot be in ascending order if reverse transform is desired
   if ("reverse" %in% trans) {
     if (ascending_ylimit) {
-      msg <- paste0("ylim: ", "c(", ylim[1], ",", ylim[2], ")",
-                    " is wrong. It should be ", "c(", ylim[2], ",", ylim[1],
-                    ")")
-      stop(msg)
+      stop(paste0("ylim: ", "c(", ylim[1], ",", ylim[2], ")",
+                  " is wrong. It should be ", "c(", ylim[2], ",", ylim[1], ")"))
     }
   }
   # `ylim` cannot be in descending order if identity transform is desired
   if ("identity" %in% trans) {
     if (!ascending_ylimit) {
-      msg <- paste0("ylim: ", "c(", ylim[1], ",", ylim[2], ")",
-                    " is wrong. It should be ", "c(", ylim[2], ",", ylim[1],
-                    ")")
-      stop(msg)
+      stop(paste0("ylim: ", "c(", ylim[1], ",", ylim[2], ")",
+                  " is wrong. It should be ", "c(", ylim[2], ",", ylim[1], ")"))
     }
   }
 
@@ -262,74 +253,74 @@ gggap <- function(plot, ylim, segments, tick_width, rel_heights,
 }
 
 plot_bottom <- function(plot, ascending_ylimit, ylim, gap, tick_width, trans) {
-      if (ascending_ylimit) {
+  if (ascending_ylimit) {
     breaks <- seq(ylim, gap, by = tick_width)
-      } else if (!ascending_ylimit) {
+  } else if (!ascending_ylimit) {
     breaks <- seq(gap, ylim, by = tick_width)
-      }
-      p_segment_i <- plot +
+  }
+  p_segment_i <- plot +
   coord_cartesian(ylim = c(ylim, gap)) +
-      theme(panel.border = element_blank()) +
-      theme(axis.line.y = element_line(),
-            axis.line.x.bottom = element_line(),
-            plot.title = element_blank(),
+  theme(panel.border = element_blank()) +
+  theme(axis.line.y = element_line(),
+        axis.line.x.bottom = element_line(),
+        plot.title = element_blank(),
         legend.position = "none") +
-      scale_y_continuous(expand = c(0, 0),
-                         breaks = breaks,
-                         trans = trans) +
-      ylab(label = NULL)
-      p_segment <- list(p_segment_i)
+  scale_y_continuous(expand = c(0, 0),
+                      breaks = breaks,
+                      trans = trans) +
+  ylab(label = NULL)
+  p_segment <- list(p_segment_i)
   names(p_segment)[length(p_segment)] <- 1
   return(p_segment)
 }
 
 plot_midd <- function(plot, i, ascending_ylimit, ylim, gap, tick_width,
   segments, trans, p_segment) {
-      if (ascending_ylimit) {
+  if (ascending_ylimit) {
     breaks <- seq(ylim, gap, by = tick_width)
-      } else if (!ascending_ylimit) {
+  } else if (!ascending_ylimit) {
     breaks <- seq(gap, ylim, by = tick_width)
-      }
-      p_segment_i <- plot +
+  }
+  p_segment_i <- plot +
   coord_cartesian(ylim = c(unlist(segments[i - 1])[2], gap)) +
-      theme(panel.border = element_blank()) +
-      theme(axis.line.y = element_line(),
-            legend.position = "none",
-            axis.text.x = element_blank(),
-            axis.ticks.x = element_blank(),
-            title = element_blank(),
+  theme(panel.border = element_blank()) +
+  theme(axis.line.y = element_line(),
+        legend.position = "none",
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        title = element_blank(),
         axis.title.x = element_blank()) +
-      scale_y_continuous(expand = c(0, 0),
-                         breaks = breaks,
-                         trans = trans) +
-      ylab(label = NULL)
-      # add y label in the middle median part
-      p_segment <- c(p_segment, list(NULL), list(p_segment_i))
-      names(p_segment)[length(p_segment)] <- i
+  scale_y_continuous(expand = c(0, 0),
+                      breaks = breaks,
+                      trans = trans) +
+  ylab(label = NULL)
+  # add y label in the middle median part
+  p_segment <- c(p_segment, list(NULL), list(p_segment_i))
+  names(p_segment)[length(p_segment)] <- i
   return(p_segment)
-    }
+}
 
 plot_top <- function(plot, i, ascending_ylimit, ylim, gap, tick_width,
   segments, trans, p_segment) {
-      if (ascending_ylimit) {
+  if (ascending_ylimit) {
     breaks <- seq(gap, ylim, by = tick_width)
-      } else if (!ascending_ylimit) {
+  } else if (!ascending_ylimit) {
     breaks <- seq(ylim, gap, by = tick_width)
-      }
-      p_segment_i <- plot +
+  }
+  p_segment_i <- plot +
   coord_cartesian(ylim = c(gap, ylim)) +
-      theme(panel.border = element_blank()) +
-      theme(axis.line.y = element_line(),
-            axis.line.x.top = element_line(),
-            legend.position = "none",
-            axis.text.x = element_blank(),
-            axis.ticks.x = element_blank(),
-            axis.title.x = element_blank()) +
-      scale_y_continuous(expand = c(0, 0),
-                         breaks = breaks,
-                         trans = trans) +
-      ylab(label = NULL)
-      p_segment <- c(p_segment, list(NULL), list(p_segment_i))
-      names(p_segment)[length(p_segment)] <- i + 1
+  theme(panel.border = element_blank()) +
+  theme(axis.line.y = element_line(),
+        axis.line.x.top = element_line(),
+        legend.position = "none",
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.title.x = element_blank()) +
+  scale_y_continuous(expand = c(0, 0),
+                      breaks = breaks,
+                      trans = trans) +
+  ylab(label = NULL)
+  p_segment <- c(p_segment, list(NULL), list(p_segment_i))
+  names(p_segment)[length(p_segment)] <- i + 1
   return(p_segment)
 }
