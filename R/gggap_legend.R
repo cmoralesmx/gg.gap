@@ -4,7 +4,6 @@
 #' @param margin Margins around the text.
 #'
 #' @return A legend-added picture
-#' @export
 #'
 #' @examples
 #' library(ggplot2)
@@ -18,9 +17,12 @@
 #'        segments = c(6,8))
 #' gggap_legend(plot = bp,
 #'            margin = c(top=1,right=1,bottom=1,left=460))
+#' @export
 gggap_legend <- function(plot,
 margin = c(top = 200, right = 200, bottom = 200, left = 200)) {
-  legend <- cowplot::get_legend(plot +
-  theme(legend.box.margin = margin(margin)))
+  legend <- cowplot::get_legend(
+    plot +
+    theme(legend.box.margin = margin(margin))
+  )
   grid::grid.draw(x = legend, recording = TRUE)
 }

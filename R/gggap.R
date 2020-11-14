@@ -14,7 +14,6 @@
 #'   element_blank element_line unit
 #' @importFrom cowplot plot_grid draw_label
 #' @return A segmented picture.
-#' @export
 #'
 #' @examples
 #' data(mtcars)
@@ -54,9 +53,10 @@
 #' gggap(plot=p,
 #'        segments=c(10,5),
 #'        ylim=c(15,0))
+#' @export
 gggap <- function(plot, ylim, segments, tick_width, rel_heights,
-                  vjust = 0,
-                  margin = c(top = 1, right = 2, bottom = 1, left = 1),
+                  vjust = 0, margin = c(top = 1,
+                    right = 2, bottom = 1, left = 1),
                   ...) {
 
   # `segments` must be a list
@@ -68,38 +68,59 @@ gggap <- function(plot, ylim, segments, tick_width, rel_heights,
   ascending_ylim <- ylim[1] < ylim[2]
   trans          <- get_desired_transform(plot)
 
-  if (segments_ordered_like_ylim(segments, ascending_ylim) &&
-      segment_pairs_ordered(segments, ascending_ylim) &&
-      segments_within_ylim(segments, ylim, ascending_ylim) &&
-      desired_transform_valid(trans, ascending_ylim, ylim)) {
-
+  if (
+    segments_ordered_like_ylim(segments, ascending_ylim) &&
+    segment_pairs_ordered(segments, ascending_ylim) &&
+    segments_within_ylim(segments, ylim, ascending_ylim) &&
+    desired_transform_valid(trans, ascending_ylim, ylim)
+  ) {
     thick_width  <- compute_thick_width(thick_width, ylim, segments)
     seg_heights  <- compute_seg_heights(segments)
     y_heights    <- compute_y_heights(segments)
 
     # plotting must be done in three stages: bottom, midd, top
-    p_segment    <- plot_bottom(plot, ascending_ylim, ylim[1],
-                                unlist(segments[1])[1],
-                                tick_width[1], trans)
+    p_segment    <- plot_bottom(
+      plot,
+      ascending_ylim,
+      ylim[1],
+      unlist(segments[1])[1],
+      tick_width[1],
+      trans
+    )
     rel_height   <- c(y_heights[1], seg_heights[1])
 
     for (i in 2:length(segments) - 1) {
-      p_segment  <- plot_midd(plot, i, ascending_ylim, ylim[1],
-                              unlist(segments[i])[1], tick_width[i],
-                              segments, trans, p_segment)
+      p_segment  <- plot_midd(
+        plot,
+        i,
+        ascending_ylim,
+        ylim[1],
+        unlist(segments[i])[1],
+        tick_width[i],
+        segments,
+        trans,
+        p_segment
+      )
       rel_height <- c(rel_height, y_heights[i], seg_heights[i])
     }
 
-    p_segment    <- plot_top(plot, length(segments), ascending_ylimit, ylim[2],
-                             unlist(segments[length(segments)])[2],
-                             tick_width[length(segments) + 1], segments,
-                             trans, p_segment)
+    p_segment    <- plot_top(
+      plot,
+      length(segments),
+      ascending_ylimit,
+      ylim[2],
+      unlist(segments[length(segments)])[2],
+      tick_width[length(segments) + 1],
+      segments,
+      trans,
+      p_segment
+    )
     rel_heights  <- c(rel_height, y_heights[length(segments)])
 
     # prevent the subtitle from appearing in all but the last segment
     subtitle     <- p_segment[[1]]$labels$subtitle
     p_segment    <- purrr::map(p_segment,
-    ~ if (is.ggplot(.)) . + labs(subtitle = NULL) else NULL)
+    ~if (is.ggplot(.)) . + labs(subtitle = NULL) else NULL)
     p_segment    <- rev(p_segment)
     p_segment[[1]]$labels$subtitle <- subtitle
 
@@ -109,19 +130,25 @@ gggap <- function(plot, ylim, segments, tick_width, rel_heights,
     angle        <- get_plot_angle(plot)
 
     # place all the plot segments together
-    plot_grid(plotlist = p_segment, ncol = 1, align = "v",
-              rel_heights = rel_heights) +
+    plot_grid(
+      plotlist = p_segment,
+      ncol = 1,
+      align = "v",
+      rel_heights = rel_heights
+    ) +
     theme(plot.margin = unit(margin, "cm")) +
-    draw_label(label = plot$labels$y,
-              x = 0,
-              hjust = plot$theme$axis.title.y$hjust,
-              vjust = vjust,
-              fontfamily = plot$theme$axis.title.y$family,
-              fontface = plot$theme$axis.title.y$face,
-              size = plot$theme$axis.title.y$size,
-              angle = angle,
-              lineheight = plot$theme$axis.title.y$lineheight,
-              colour = plot$theme$axis.title.y$colour)
+    draw_label(
+      label = plot$labels$y,
+      x = 0,
+      hjust = plot$theme$axis.title.y$hjust,
+      vjust = vjust,
+      fontfamily = plot$theme$axis.title.y$family,
+      fontface = plot$theme$axis.title.y$face,
+      size = plot$theme$axis.title.y$size,
+      angle = angle,
+      lineheight = plot$theme$axis.title.y$lineheight,
+      colour = plot$theme$axis.title.y$colour
+    )
   }
 }
 
@@ -134,13 +161,17 @@ plot_bottom <- function(plot, ascending_ylimit, ylim, gap, tick_width, trans) {
   p_segment_i <- plot +
   coord_cartesian(ylim = c(ylim, gap)) +
   theme(panel.border = element_blank()) +
-  theme(axis.line.y = element_line(),
-        axis.line.x.bottom = element_line(),
-        plot.title = element_blank(),
-        legend.position = "none") +
-  scale_y_continuous(expand = c(0, 0),
-                      breaks = breaks,
-                      trans = trans) +
+  theme(
+    axis.line.y = element_line(),
+    axis.line.x.bottom = element_line(),
+    plot.title = element_blank(),
+    legend.position = "none"
+  ) +
+  scale_y_continuous(
+    expand = c(0, 0),
+    breaks = breaks,
+    trans = trans
+  ) +
   ylab(label = NULL)
   p_segment <- list(p_segment_i)
   names(p_segment)[length(p_segment)] <- 1
@@ -148,7 +179,7 @@ plot_bottom <- function(plot, ascending_ylimit, ylim, gap, tick_width, trans) {
 }
 
 plot_midd <- function(plot, i, ascending_ylimit, ylim, gap, tick_width,
-  segments, trans, p_segment) {
+                      segments, trans, p_segment) {
   if (ascending_ylimit) {
     breaks <- seq(ylim, gap, by = tick_width)
   } else if (!ascending_ylimit) {
@@ -157,15 +188,19 @@ plot_midd <- function(plot, i, ascending_ylimit, ylim, gap, tick_width,
   p_segment_i <- plot +
   coord_cartesian(ylim = c(unlist(segments[i - 1])[2], gap)) +
   theme(panel.border = element_blank()) +
-  theme(axis.line.y = element_line(),
-        legend.position = "none",
-        axis.text.x = element_blank(),
-        axis.ticks.x = element_blank(),
-        title = element_blank(),
-        axis.title.x = element_blank()) +
-  scale_y_continuous(expand = c(0, 0),
-                      breaks = breaks,
-                      trans = trans) +
+  theme(
+    axis.line.y = element_line(),
+    legend.position = "none",
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    title = element_blank(),
+    axis.title.x = element_blank()
+  ) +
+  scale_y_continuous(
+    expand = c(0, 0),
+    breaks = breaks,
+    trans = trans
+  ) +
   ylab(label = NULL)
   # add y label in the middle median part
   p_segment <- c(p_segment, list(NULL), list(p_segment_i))
@@ -174,7 +209,7 @@ plot_midd <- function(plot, i, ascending_ylimit, ylim, gap, tick_width,
 }
 
 plot_top <- function(plot, i, ascending_ylimit, ylim, gap, tick_width,
-  segments, trans, p_segment) {
+                     segments, trans, p_segment) {
   if (ascending_ylimit) {
     breaks <- seq(gap, ylim, by = tick_width)
   } else if (!ascending_ylimit) {
@@ -183,15 +218,15 @@ plot_top <- function(plot, i, ascending_ylimit, ylim, gap, tick_width,
   p_segment_i <- plot +
   coord_cartesian(ylim = c(gap, ylim)) +
   theme(panel.border = element_blank()) +
-  theme(axis.line.y = element_line(),
-        axis.line.x.top = element_line(),
-        legend.position = "none",
-        axis.text.x = element_blank(),
-        axis.ticks.x = element_blank(),
-        axis.title.x = element_blank()) +
-  scale_y_continuous(expand = c(0, 0),
-                      breaks = breaks,
-                      trans = trans) +
+  theme(
+    axis.line.y = element_line(),
+    axis.line.x.top = element_line(),
+    legend.position = "none",
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title.x = element_blank()
+    ) +
+  scale_y_continuous(expand = c(0, 0), breaks = breaks, trans = trans) +
   ylab(label = NULL)
   p_segment <- c(p_segment, list(NULL), list(p_segment_i))
   names(p_segment)[length(p_segment)] <- i + 1
