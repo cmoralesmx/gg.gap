@@ -107,7 +107,7 @@ gggap <- function(plot, ylim, segments, tick_width, rel_heights,
     p_segment    <- plot_top(
       plot,
       length(segments),
-      ascending_ylimit,
+      ascending_ylim,
       ylim[2],
       unlist(segments[length(segments)])[2],
       tick_width[length(segments) + 1],
@@ -152,10 +152,10 @@ gggap <- function(plot, ylim, segments, tick_width, rel_heights,
   }
 }
 
-plot_bottom <- function(plot, ascending_ylimit, ylim, gap, tick_width, trans) {
-  if (ascending_ylimit) {
+plot_bottom <- function(plot, ascending_ylim, ylim, gap, tick_width, trans) {
+  if (ascending_ylim) {
     breaks <- seq(ylim, gap, by = tick_width)
-  } else if (!ascending_ylimit) {
+  } else if (!ascending_ylim) {
     breaks <- seq(gap, ylim, by = tick_width)
   }
   p_segment_i <- plot +
@@ -178,11 +178,11 @@ plot_bottom <- function(plot, ascending_ylimit, ylim, gap, tick_width, trans) {
   return(p_segment)
 }
 
-plot_midd <- function(plot, i, ascending_ylimit, ylim, gap, tick_width,
+plot_midd <- function(plot, i, ascending_ylim, ylim, gap, tick_width,
                       segments, trans, p_segment) {
-  if (ascending_ylimit) {
+  if (ascending_ylim) {
     breaks <- seq(ylim, gap, by = tick_width)
-  } else if (!ascending_ylimit) {
+  } else if (!ascending_ylim) {
     breaks <- seq(gap, ylim, by = tick_width)
   }
   p_segment_i <- plot +
@@ -208,11 +208,11 @@ plot_midd <- function(plot, i, ascending_ylimit, ylim, gap, tick_width,
   return(p_segment)
 }
 
-plot_top <- function(plot, i, ascending_ylimit, ylim, gap, tick_width,
+plot_top <- function(plot, i, ascending_ylim, ylim, gap, tick_width,
                      segments, trans, p_segment) {
-  if (ascending_ylimit) {
+  if (ascending_ylim) {
     breaks <- seq(gap, ylim, by = tick_width)
-  } else if (!ascending_ylimit) {
+  } else if (!ascending_ylim) {
     breaks <- seq(ylim, gap, by = tick_width)
   }
   p_segment_i <- plot +
@@ -240,23 +240,24 @@ get_validated_ylim <- function(ylim, plot) {
   } else if (ylim[1] == ylim[2]) {
     stop("ylim values must be different")
   } else if (missing(ylim)) {
+    print(paste("ylim is OK, values", ylim))
     return(plot$coordinates$limits$y)
   }
 }
 
-segments_ordered_like_ylim <- function(segments, ascending_ylimit) {
+segments_ordered_like_ylim <- function(segments, ascending_ylim) {
   # `segments` must be ordered, either ascending or descending order is valid
   # and must match `ylim` ordering
   for (j in seq_len(length(segments))) {
     seg1 <- segments[[j]][1]
     seg2 <- segments[[j]][2]
     if (seg1 > seg2) {
-      if (ascending_ylimit) {
+      if (ascending_ylim) {
         stop(paste0("No.", j, " segment: c(", seg1, ",", seg2,
                     ") is wrong. It should be ", "c(", seg2, ",", seg1, ")"))
       }
     } else if (seg1 < seg2) {
-      if (!ascending_ylimit) {
+      if (!ascending_ylim) {
         stop(paste0("No.", j, " segment: c(", seg1, ",", seg2,
                     ") is wrong. It should be ", "c(", seg2, ",", seg1, ")"))
       }
@@ -268,10 +269,10 @@ segments_ordered_like_ylim <- function(segments, ascending_ylimit) {
   return(TRUE)
 }
 
-segment_pairs_ordered <- function(segments, ascending_ylimit) {
+segment_pairs_ordered <- function(segments, ascending_ylim) {
   # the paired sequence of `segments` must follow to the ordering of `ylims`
   if (length(segments) >= 2) {
-    if (ascending_ylimit) {
+    if (ascending_ylim) {
       for (k in 2:length(segments)) {
         # the second element of the previous segment cannot be larger than
         # the first element of the current segment
@@ -284,7 +285,7 @@ segment_pairs_ordered <- function(segments, ascending_ylimit) {
         }
       }
       return(TRUE)
-    } else if (!ascending_ylimit) {
+    } else if (!ascending_ylim) {
       for (k in 2:length(segments)) {
         # the second element of the previous segment cannot be smaller than
         # the first element of the current segment
@@ -303,13 +304,13 @@ segment_pairs_ordered <- function(segments, ascending_ylimit) {
 
 segments_within_ylim <- function(segments, ylim, ascending_ylim) {
   # the range of values in `segments` must be within the values in `ylim`
-  if (ascending_ylimit) {
+  if (ascending_ylim) {
     # `ylim` is in ascending order
     if (min(unlist(segments)) <= ylim[1])
       stop("the minimum of segments must be larger than the minium of ylim")
     if (max(unlist(segments)) > ylim[2])
       stop("the maximum of segments must be smaller than maximum of ylim")
-  } else if (!ascending_ylimit) {
+  } else if (!ascending_ylim) {
     # `ylim` is in descending order
     if (min(unlist(segments)) <= ylim[2])
       stop("the minimum of segments must be larger than the minium of ylim")
@@ -370,17 +371,17 @@ get_desired_transform <- function(plot) {
   }
 }
 
-desired_transform_valid <- function(trans, ascending_ylimit, ylim) {
+desired_transform_valid <- function(trans, ascending_ylim, ylim) {
   # `ylim` cannot be in ascending order if reverse transform is desired
   if ("reverse" %in% trans) {
-    if (ascending_ylimit) {
+    if (ascending_ylim) {
       stop(paste0("ylim: ", "c(", ylim[1], ",", ylim[2], ")",
                   " is wrong. It should be ", "c(", ylim[2], ",", ylim[1], ")"))
     }
   }
   # `ylim` cannot be in descending order if identity transform is desired
   if ("identity" %in% trans) {
-    if (!ascending_ylimit) {
+    if (!ascending_ylim) {
       stop(paste0("ylim: ", "c(", ylim[1], ",", ylim[2], ")",
                   " is wrong. It should be ", "c(", ylim[2], ",", ylim[1], ")"))
     }

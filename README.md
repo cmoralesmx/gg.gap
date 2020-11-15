@@ -1,10 +1,11 @@
 # gggap
+
 Easy to define segments in y-axis for 'ggplot2'.
 
-[![CRAN RStudio mirror
-downloads](http://cranlogs.r-pkg.org/badges/ggap)](http://www.r-pkg.org/pkg/ggap)
+<!-- [![CRAN RStudio mirror
+downloads](http://cranlogs.r-pkg.org/badges/ggap)](http://www.r-pkg.org/pkg/ggap) -->
 
-## 安装
+## Installation
 
 You can install `ggap` from CRAN:
 
@@ -19,7 +20,7 @@ Or get the development version from Github:
 devtools::install_github("cmoralesmx/ggap")
 ```
 
-## 使用
+## How to use gggap
 
 ``` r
 data(mtcars)
