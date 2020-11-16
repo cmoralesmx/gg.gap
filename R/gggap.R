@@ -242,7 +242,6 @@ get_validated_ylim <- function(ylim, plot) {
   } else if (ylim[1] == ylim[2]) {
     stop("ylim values must be different")
   } else if (missing(ylim)) {
-    print(paste("ylim is taken from the plot, values", ylim))
     return(plot$coordinates$limits$y)
   } else {
     return(ylim)
@@ -272,7 +271,6 @@ segments_ordering_matches_ylim <- function(segments, ascending_ylim) {
 segments_values_ordered_right <- function(segments, ascending_ylim) {
   # the paired sequence of `segments` must follow to the ordering of `ylims`
   if (length(segments) >= 2) {
-      print("segment_pairs_ordered, ascending_ylim")
       for (k in 2:length(segments)) {
         # the second element of the previous segment cannot be larger than
         # the first element of the current segment
@@ -296,7 +294,6 @@ segments_values_ordered_right <- function(segments, ascending_ylim) {
   }
 
 segments_within_ylim <- function(segments, ylim, ascending_ylim) {
-  print("segments_within_ylim")
   if (ascending_ylim) {
     ylim_min <- ylim[1]
     ylim_max <- ylim[2]
