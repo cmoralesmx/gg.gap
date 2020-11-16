@@ -54,32 +54,36 @@
 #'        segments=c(10,5),
 #'        ylim=c(15,0))
 #' @export
-gggap <- function(plot, ylim, segments, tick_width, rel_heights,
-                  vjust = 0, margin = c(top = 1,
-                    right = 2, bottom = 1, left = 1),
+gggap <- function(plot,
+                  ylim,
+                  segments,
+                  tick_width,
+                  rel_heights,
+                  vjust = 0,
+                  margin = c(top = 1, right = 2, bottom = 1, left = 1),
                   ...) {
 
   # `segments` must be a list
   if (!is.list(segments)) {
-    segments     <- list(segments)
+    segments <- list(segments)
   }
 
   ylim           <- get_validated_ylim(ylim, plot)
   ascending_ylim <- ylim[1] < ylim[2]
   trans          <- get_desired_transform(plot)
 
-  if (
-    segments_ordered_like_ylim(segments, ascending_ylim) &&
-    segment_pairs_ordered(segments, ascending_ylim) &&
-    segments_within_ylim(segments, ylim, ascending_ylim) &&
-    desired_transform_valid(trans, ascending_ylim, ylim)
-  ) {
-    thick_width  <- compute_thick_width(thick_width, ylim, segments)
-    seg_heights  <- compute_seg_heights(segments)
-    y_heights    <- compute_y_heights(segments)
+  t1 <- segments_ordering_matches_ylim(segments, ascending_ylim)
+  t2 <- segments_values_ordered_right(segments, ascending_ylim)
+  t3 <- segments_within_ylim(segments, ylim, ascending_ylim)
+  t4 <- desired_transform_valid(trans, ascending_ylim, ylim)
+
+  if (t1 & t2 & t3 & t4) {
+    tick_width  <- compute_tick_width(tick_width, ylim, segments)
+    seg_heights <- compute_seg_heights(segments)
+    y_heights   <- compute_y_heights(segments)
 
     # plotting must be done in three stages: bottom, midd, top
-    p_segment    <- plot_bottom(
+    p_segment <- plot_bottom(
       plot,
       ascending_ylim,
       ylim[1],
@@ -87,15 +91,19 @@ gggap <- function(plot, ylim, segments, tick_width, rel_heights,
       tick_width[1],
       trans
     )
-    rel_height   <- c(y_heights[1], seg_heights[1])
+    rel_height <- c(y_heights[1], seg_heights[1])
 
-    for (i in 2:length(segments) - 1) {
-      p_segment  <- plot_midd(
+    if (length(segments) < 2) {
+      print("plot_midd, skipped, only 1 segment")
+    } else {
+      for (i in 2:length(segments)) {
+        gap <- unlist(segments[i])
+        p_segment <- plot_midd(
         plot,
         i,
         ascending_ylim,
         ylim[1],
-        unlist(segments[i])[1],
+          gap[1], # gap[1]?
         tick_width[i],
         segments,
         trans,
@@ -103,8 +111,9 @@ gggap <- function(plot, ylim, segments, tick_width, rel_heights,
       )
       rel_height <- c(rel_height, y_heights[i], seg_heights[i])
     }
+    }
 
-    p_segment    <- plot_top(
+    p_segment <- plot_top(
       plot,
       length(segments),
       ascending_ylim,
@@ -115,29 +124,28 @@ gggap <- function(plot, ylim, segments, tick_width, rel_heights,
       trans,
       p_segment
     )
-    rel_heights  <- c(rel_height, y_heights[length(segments)])
+    rel_height <- c(rel_height, y_heights[length(segments)])
 
-    # prevent the subtitle from appearing in all but the last segment
-    subtitle     <- p_segment[[1]]$labels$subtitle
-    p_segment    <- purrr::map(p_segment,
-    ~if (is.ggplot(.)) . + labs(subtitle = NULL) else NULL)
-    p_segment    <- rev(p_segment)
-    p_segment[[1]]$labels$subtitle <- subtitle
-
+    # segments are produced in reverse ordering
+    p_segment   <- rev(p_segment)
     # `rel_heights` could be missing? really?
-    rel_heights  <- rev(ifelse(missing(rel_heights), rel_height, rel_heights))
+    if (missing(rel_heights)) {
+      rel_heights <- rev(rel_height)
+    } else {
+      rel_heights <- rev(rel_heights)
+    }
 
-    angle        <- get_plot_angle(plot)
+    angle <- get_plot_angle(plot)
 
     # place all the plot segments together
-    plot_grid(
+    cowplot::plot_grid(
       plotlist = p_segment,
       ncol = 1,
       align = "v",
       rel_heights = rel_heights
     ) +
     theme(plot.margin = unit(margin, "cm")) +
-    draw_label(
+    cowplot::draw_label(
       label = plot$labels$y,
       x = 0,
       hjust = plot$theme$axis.title.y$hjust,
@@ -152,29 +160,29 @@ gggap <- function(plot, ylim, segments, tick_width, rel_heights,
   }
 }
 
-plot_bottom <- function(plot, ascending_ylim, ylim, gap, tick_width, trans) {
+plot_top <- function(plot, i, ascending_ylim, ylim, gap, tick_width,
+                     segments, trans, p_segment) {
   if (ascending_ylim) {
-    breaks <- seq(ylim, gap, by = tick_width)
-  } else if (!ascending_ylim) {
     breaks <- seq(gap, ylim, by = tick_width)
+  } else {
+    breaks <- seq(ylim, gap, by = tick_width)
   }
   p_segment_i <- plot +
-  coord_cartesian(ylim = c(ylim, gap)) +
-  theme(panel.border = element_blank()) +
+  coord_cartesian(ylim = c(gap, ylim)) +
+  theme(panel.border   = element_blank()) +
   theme(
-    axis.line.y = element_line(),
-    axis.line.x.bottom = element_line(),
-    plot.title = element_blank(),
-    legend.position = "none"
+    axis.line.y     = element_line(),
+    axis.line.x.top = element_line(),
+    legend.position = c(0.8, 0.7),
+    axis.text.x     = element_blank(),
+    axis.ticks.x    = element_blank(),
+    axis.title.x    = element_blank()
   ) +
-  scale_y_continuous(
-    expand = c(0, 0),
-    breaks = breaks,
-    trans = trans
-  ) +
-  ylab(label = NULL)
-  p_segment <- list(p_segment_i)
-  names(p_segment)[length(p_segment)] <- 1
+  scale_y_continuous(expand = c(0, 0), breaks = breaks, trans = trans) +
+  ylab(label = NULL) +
+  labs(caption = NULL)
+  p_segment <- c(p_segment, list(NULL), list(p_segment_i))
+  names(p_segment)[length(p_segment)] <- i + 1
   return(p_segment)
 }
 
@@ -182,25 +190,21 @@ plot_midd <- function(plot, i, ascending_ylim, ylim, gap, tick_width,
                       segments, trans, p_segment) {
   if (ascending_ylim) {
     breaks <- seq(ylim, gap, by = tick_width)
-  } else if (!ascending_ylim) {
+  } else {
     breaks <- seq(gap, ylim, by = tick_width)
   }
   p_segment_i <- plot +
   coord_cartesian(ylim = c(unlist(segments[i - 1])[2], gap)) +
-  theme(panel.border = element_blank()) +
+  theme(panel.border   = element_blank()) +
   theme(
-    axis.line.y = element_line(),
+    axis.line.y     = element_line(),
     legend.position = "none",
-    axis.text.x = element_blank(),
-    axis.ticks.x = element_blank(),
-    title = element_blank(),
-    axis.title.x = element_blank()
+    axis.text.x     = element_blank(),
+    axis.ticks.x    = element_blank(),
+    title           = element_blank(),
+    axis.title.x    = element_blank()
   ) +
-  scale_y_continuous(
-    expand = c(0, 0),
-    breaks = breaks,
-    trans = trans
-  ) +
+  scale_y_continuous(expand = c(0, 0), breaks = breaks, trans  = trans) +
   ylab(label = NULL)
   # add y label in the middle median part
   p_segment <- c(p_segment, list(NULL), list(p_segment_i))
@@ -208,28 +212,26 @@ plot_midd <- function(plot, i, ascending_ylim, ylim, gap, tick_width,
   return(p_segment)
 }
 
-plot_top <- function(plot, i, ascending_ylim, ylim, gap, tick_width,
-                     segments, trans, p_segment) {
+plot_bottom <- function(plot, ascending_ylim, ylim, gap, tick_width, trans) {
   if (ascending_ylim) {
-    breaks <- seq(gap, ylim, by = tick_width)
-  } else if (!ascending_ylim) {
     breaks <- seq(ylim, gap, by = tick_width)
+  } else {
+    breaks <- seq(gap, ylim, by = tick_width)
   }
   p_segment_i <- plot +
-  coord_cartesian(ylim = c(gap, ylim)) +
-  theme(panel.border = element_blank()) +
+  coord_cartesian(ylim = c(ylim, gap)) +
+  theme(panel.border   = element_blank()) +
   theme(
-    axis.line.y = element_line(),
-    axis.line.x.top = element_line(),
-    legend.position = "none",
-    axis.text.x = element_blank(),
-    axis.ticks.x = element_blank(),
-    axis.title.x = element_blank()
+    axis.line.y        = element_line(),
+    axis.line.x.bottom = element_line(),
+    plot.title         = element_blank(),
+    legend.position    = "none"
     ) +
   scale_y_continuous(expand = c(0, 0), breaks = breaks, trans = trans) +
-  ylab(label = NULL)
-  p_segment <- c(p_segment, list(NULL), list(p_segment_i))
-  names(p_segment)[length(p_segment)] <- i + 1
+  ylab(label = NULL) +
+  labs(subtitle = NULL)
+  p_segment <- list(p_segment_i)
+  names(p_segment)[length(p_segment)] <- 1
   return(p_segment)
 }
 
@@ -240,43 +242,46 @@ get_validated_ylim <- function(ylim, plot) {
   } else if (ylim[1] == ylim[2]) {
     stop("ylim values must be different")
   } else if (missing(ylim)) {
-    print(paste("ylim is OK, values", ylim))
+    print(paste("ylim is taken from the plot, values", ylim))
     return(plot$coordinates$limits$y)
+  } else {
+    return(ylim)
   }
 }
 
-segments_ordered_like_ylim <- function(segments, ascending_ylim) {
+segments_ordering_matches_ylim <- function(segments, ascending_ylim) {
   # `segments` must be ordered, either ascending or descending order is valid
   # and must match `ylim` ordering
   for (j in seq_len(length(segments))) {
     seg1 <- segments[[j]][1]
     seg2 <- segments[[j]][2]
-    if (seg1 > seg2) {
-      if (ascending_ylim) {
+    if ((seg1 > seg2) & ascending_ylim) {
         stop(paste0("No.", j, " segment: c(", seg1, ",", seg2,
                     ") is wrong. It should be ", "c(", seg2, ",", seg1, ")"))
-      }
-    } else if (seg1 < seg2) {
-      if (!ascending_ylim) {
+    } else if ((seg1 < seg2) & !ascending_ylim) {
         stop(paste0("No.", j, " segment: c(", seg1, ",", seg2,
                     ") is wrong. It should be ", "c(", seg2, ",", seg1, ")"))
-      }
-    } else {
+    } else if (seg1 == seg2) {
       stop(paste0("No.", j, " segment: c(", seg1, ",", seg2,
-                  ") is wrong. They must not be the same"))
+                  ") is wrong. They must be different"))
     }
   }
   return(TRUE)
 }
 
-segment_pairs_ordered <- function(segments, ascending_ylim) {
+segments_values_ordered_right <- function(segments, ascending_ylim) {
   # the paired sequence of `segments` must follow to the ordering of `ylims`
   if (length(segments) >= 2) {
-    if (ascending_ylim) {
+      print("segment_pairs_ordered, ascending_ylim")
       for (k in 2:length(segments)) {
         # the second element of the previous segment cannot be larger than
         # the first element of the current segment
-        if (segments[[k - 1]][2] > segments[[k]][1]) {
+      if (
+        ifelse(
+              ascending,
+              segments[[k - 1]][2] > segments[[k]][1],
+              segments[[k - 1]][2] < segments[[k]][1]
+            )) {
           pre <- paste0("c(", segments[[k - 1]][1], ",", segments[[k - 1]][2],
                         ")")
           suf <- paste0("c(", segments[[k]][1], ",", segments[[k]][2], ")")
@@ -285,42 +290,30 @@ segment_pairs_ordered <- function(segments, ascending_ylim) {
         }
       }
       return(TRUE)
-    } else if (!ascending_ylim) {
-      for (k in 2:length(segments)) {
-        # the second element of the previous segment cannot be smaller than
-        # the first element of the current segment
-        if (segments[[k - 1]][2] < segments[[k]][1]) {
-          pre <- paste0("c(", segments[[k - 1]][1], ",", segments[[k - 1]][2],
-                        ")")
-          suf <- paste0("c(", segments[[k]][1], ",", segments[[k]][2], ")")
-          stop(paste0("Segments ", k - 1, " and ", k, ": ", pre, ",", suf,
-                      " are wrong. They should be ", suf, ",", pre))
-        }
-      }
+  } else {
       return(TRUE)
     }
   }
-}
 
 segments_within_ylim <- function(segments, ylim, ascending_ylim) {
-  # the range of values in `segments` must be within the values in `ylim`
+  print("segments_within_ylim")
   if (ascending_ylim) {
-    # `ylim` is in ascending order
-    if (min(unlist(segments)) <= ylim[1])
-      stop("the minimum of segments must be larger than the minium of ylim")
-    if (max(unlist(segments)) > ylim[2])
-      stop("the maximum of segments must be smaller than maximum of ylim")
-  } else if (!ascending_ylim) {
-    # `ylim` is in descending order
-    if (min(unlist(segments)) <= ylim[2])
-      stop("the minimum of segments must be larger than the minium of ylim")
-    if (max(unlist(segments)) > ylim[1])
-      stop("the maximum of segments must be smaller than maximum of ylim")
+    ylim_min <- ylim[1]
+    ylim_max <- ylim[2]
+  } else {
+    ylim_min <- ylim[2]
+    ylim_max <- ylim[1]
   }
+  # the range of values in `segments` must be within the values in `ylim`
+  if (min(unlist(segments)) <= ylim_min)
+    stop("the minimum of segments must be >= than the minimum of ylim")
+  if (max(unlist(segments)) > ylim_max)
+    stop("the maximum of segments must be < than maximum of ylim")
+
   return(TRUE)
 }
 
-compute_thick_width <- function(thick_width, ylim, segments) {
+compute_tick_width <- function(tick_width, ylim, segments) {
   # `tick_width` must be computed if not specified
   if (missing(tick_width)) {
     tick_width <- rep(abs(ylim[2] - ylim[1]) / 10, length(segments) + 1)
@@ -333,7 +326,7 @@ compute_thick_width <- function(thick_width, ylim, segments) {
       }
     }
   }
-  return(thick_width)
+  return(tick_width)
 }
 
 compute_seg_heights <- function(segments) {
