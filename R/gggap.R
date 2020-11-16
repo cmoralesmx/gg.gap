@@ -11,48 +11,69 @@
 #' @param margin Margins around the text.
 #' @param ... Arguments will be handed to `plot_grid()` in `cowplot`.
 #' @importFrom ggplot2 coord_cartesian theme scale_y_continuous ylab
-#'   element_blank element_line unit
+#'   element_blank element_line unit labs
 #' @importFrom cowplot plot_grid draw_label
 #' @return A segmented picture.
 #'
 #' @examples
 #' data(mtcars)
 #' library(ggplot2)
-#' p<-ggplot(data = mtcars, aes(x = gear, fill = gear)) +
-#'     geom_bar() +
-#'     ggtitle("Number of Cars by Gear") +
-#'     xlab("Gears")
+#' p <- ggplot(
+#'   data = mtcars,
+#'   aes(x = gear, fill = gear)
+#' ) +
+#' geom_bar() +
+#' ggtitle("Number of Cars by Gears") +
+#' xlab("Gears")
 #'
-#' #single segments and missing tick_width
-#' gggap(plot=p,
-#'        segments=c(5,10),
-#'        ylim=c(0,50))
-#' #tick_width can be one or more numbers
-#' gggap(plot=p,
-#'        segments=c(5,10),
-#'        tick_width = c(1,10),
-#'        ylim=c(0,50))
-#' #segments list cantains more than one number vectors
-#' gggap(plot=p,
-#'        segments=list(c(2.5,4),c(5,10)),
-#'        tick_width = c(1,0.5,10),
-#'        ylim=c(0,50))
-#' #rel_heights can set the relative height for segments and segmented y-axis
-#' gggap(plot=p,
-#'        segments=list(c(2.5,4),c(5,10)),
-#'        tick_width = c(1,0.5,10),
-#'        rel_heights=c(0.2,0,0.2,0,1),
-#'        ylim=c(0,50))
-#' #reversed y-axis
-#' p<-ggplot(data = mtcars, aes(x = gear, fill = gear)) +
-#'     geom_bar() +
-#'     ggtitle("Number of Cars by Gear") +
-#'     xlab("Gears")+
-#'     scale_y_continuous(trans = 'reverse')
-#' #single segments and missing tick_width
-#' gggap(plot=p,
-#'        segments=c(10,5),
-#'        ylim=c(15,0))
+#' # A single segment and missing tick_width
+#' gggap(
+#'   plot = p,
+#'   segments = c(5, 10),
+#'   ylim = c(0, 50)
+#' )
+#'
+#' # `tick_width` can be one or more numbers
+#' gggap(
+#'   plot = p,
+#'   segments = c(5, 10),
+#'   tick_width = c(1, 10),
+#'   ylim=c(0, 50)
+#' )
+#'
+#' # The `segments` list cantains vectors with pairs of element each
+#' gggap(
+#'   plot = p,
+#'   segments = list(c(2.5, 4), c(5, 10)),
+#'   tick_width = c(1, 0.5, 10),
+#'   ylim=c(0, 50)
+#' )
+#'
+#' # `rel_heights` can set the relative height for segments and segmented y-axis
+#' gggap(
+#'   plot = p,
+#'   segments = list(c(2.5, 4), c(5, 10)),
+#'   tick_width = c(1, 0.5, 10),
+#'   rel_heights = c(0.2, 0, 0.2, 0, 1),
+#'   ylim = c(0, 50)
+#' )
+#'
+#' # reversed `y-axis`
+#' p <- ggplot(
+#'   data = mtcars,
+#'   aes(x = gear, fill = gear)
+#' ) +
+#' geom_bar() +
+#' ggtitle("Number of Cars by Gears") +
+#' xlab("Gears")+
+#' scale_y_continuous(trans = 'reverse')
+#'
+#' # single segments and missing `tick_width`
+#' gggap(
+#'   plot = p,
+#'   segments = c(10, 5),
+#'   ylim = c(15, 0)
+#' )
 #' @export
 gggap <- function(plot,
                   ylim,
@@ -99,18 +120,18 @@ gggap <- function(plot,
       for (i in 2:length(segments)) {
         gap <- unlist(segments[i])
         p_segment <- plot_midd(
-        plot,
-        i,
-        ascending_ylim,
-        ylim[1],
-          gap[1], # gap[1]?
-        tick_width[i],
-        segments,
-        trans,
-        p_segment
-      )
-      rel_height <- c(rel_height, y_heights[i], seg_heights[i])
-    }
+          plot,
+          i,
+          ascending_ylim,
+          ylim[1],
+          gap[1],
+          tick_width[i],
+          segments,
+          trans,
+          p_segment
+        )
+        rel_height <- c(rel_height, y_heights[i], seg_heights[i])
+      }
     }
 
     p_segment <- plot_top(
@@ -180,7 +201,7 @@ plot_top <- function(plot, i, ascending_ylim, ylim, gap, tick_width,
   ) +
   scale_y_continuous(expand = c(0, 0), breaks = breaks, trans = trans) +
   ylab(label = NULL) +
-  labs(caption = NULL)
+  ggplot2::labs(caption = NULL)
   p_segment <- c(p_segment, list(NULL), list(p_segment_i))
   names(p_segment)[length(p_segment)] <- i + 1
   return(p_segment)
@@ -206,7 +227,7 @@ plot_midd <- function(plot, i, ascending_ylim, ylim, gap, tick_width,
   ) +
   scale_y_continuous(expand = c(0, 0), breaks = breaks, trans  = trans) +
   ylab(label = NULL)
-  # add y label in the middle median part
+  # add y label in the middle part
   p_segment <- c(p_segment, list(NULL), list(p_segment_i))
   names(p_segment)[length(p_segment)] <- i
   return(p_segment)
@@ -229,7 +250,7 @@ plot_bottom <- function(plot, ascending_ylim, ylim, gap, tick_width, trans) {
     ) +
   scale_y_continuous(expand = c(0, 0), breaks = breaks, trans = trans) +
   ylab(label = NULL) +
-  labs(subtitle = NULL)
+  ggplot2::labs(subtitle = NULL)
   p_segment <- list(p_segment_i)
   names(p_segment)[length(p_segment)] <- 1
   return(p_segment)
@@ -255,11 +276,11 @@ segments_ordering_matches_ylim <- function(segments, ascending_ylim) {
     seg1 <- segments[[j]][1]
     seg2 <- segments[[j]][2]
     if ((seg1 > seg2) & ascending_ylim) {
-        stop(paste0("No.", j, " segment: c(", seg1, ",", seg2,
-                    ") is wrong. It should be ", "c(", seg2, ",", seg1, ")"))
+      stop(paste0("No.", j, " segment: c(", seg1, ",", seg2,
+                  ") is wrong. It should be ", "c(", seg2, ",", seg1, ")"))
     } else if ((seg1 < seg2) & !ascending_ylim) {
-        stop(paste0("No.", j, " segment: c(", seg1, ",", seg2,
-                    ") is wrong. It should be ", "c(", seg2, ",", seg1, ")"))
+      stop(paste0("No.", j, " segment: c(", seg1, ",", seg2,
+                  ") is wrong. It should be ", "c(", seg2, ",", seg1, ")"))
     } else if (seg1 == seg2) {
       stop(paste0("No.", j, " segment: c(", seg1, ",", seg2,
                   ") is wrong. They must be different"))
@@ -271,27 +292,28 @@ segments_ordering_matches_ylim <- function(segments, ascending_ylim) {
 segments_values_ordered_right <- function(segments, ascending_ylim) {
   # the paired sequence of `segments` must follow to the ordering of `ylims`
   if (length(segments) >= 2) {
-      for (k in 2:length(segments)) {
-        # the second element of the previous segment cannot be larger than
-        # the first element of the current segment
+    for (k in 2:length(segments)) {
+      # the second element of the previous segment cannot be larger than
+      # the first element of the current segment
       if (
         ifelse(
-              ascending,
-              segments[[k - 1]][2] > segments[[k]][1],
-              segments[[k - 1]][2] < segments[[k]][1]
-            )) {
-          pre <- paste0("c(", segments[[k - 1]][1], ",", segments[[k - 1]][2],
+          ascending_ylim,
+          segments[[k - 1]][2] > segments[[k]][1],
+          segments[[k - 1]][2] < segments[[k]][1]
+        )
+      ) {
+        pre <- paste0("c(", segments[[k - 1]][1], ",", segments[[k - 1]][2],
                         ")")
-          suf <- paste0("c(", segments[[k]][1], ",", segments[[k]][2], ")")
-          stop(paste0("Segments ", k - 1, " and ", k, ": ", pre, ",", suf,
-                      " are wrong. They should be ", suf, ",", pre))
-        }
+        suf <- paste0("c(", segments[[k]][1], ",", segments[[k]][2], ")")
+        stop(paste0("Segments ", k - 1, " and ", k, ": ", pre, ",", suf,
+                    " are wrong. They should be ", suf, ",", pre))
       }
-      return(TRUE)
-  } else {
-      return(TRUE)
     }
+    return(TRUE)
+  } else {
+    return(TRUE)
   }
+}
 
 segments_within_ylim <- function(segments, ylim, ascending_ylim) {
   if (ascending_ylim) {
