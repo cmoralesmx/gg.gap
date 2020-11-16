@@ -2,7 +2,7 @@
 
 Easily create segments in the y-axis of a 'ggplot2' plot.  
 
-This project builds on top of [gg.gap v1.3](https://github.com/ChrisLou-bioinfo/gg.gap) by Jiacheng Lou, et al.  
+This project builds on top of [gg.gap v1.4](https://github.com/ChrisLou-bioinfo/gg.gap) by Jiacheng Lou, et al.  
 
 What changed with respect to upstream?  
 - Improved handling of subtitles and captions. These were duplicated and placed in the gap between the new segments of the plot.  
