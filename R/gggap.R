@@ -61,6 +61,7 @@ gggap <- function(plot,
                   rel_heights,
                   vjust = 0,
                   margin = c(top = 1, right = 2, bottom = 1, left = 1),
+                  debug = FALSE,
                   ...) {
 
   # `segments` must be a list
@@ -70,6 +71,8 @@ gggap <- function(plot,
 
   ylim           <- get_validated_ylim(ylim, plot)
   ascending_ylim <- ylim[1] < ylim[2]
+  if (debug)
+    print(ifelse(ascending_ylim, "ASCending ylim", "DESCending ylim"))
   trans          <- get_desired_transform(plot)
 
   t1 <- segments_ordering_matches_ylim(segments, ascending_ylim)
@@ -82,6 +85,8 @@ gggap <- function(plot,
     seg_heights <- compute_seg_heights(segments)
     y_heights   <- compute_y_heights(segments)
 
+    if (debug)
+      print("Plotting started")
     # plotting must be done in three stages: bottom, midd, top
     p_segment <- plot_bottom(
       plot,
@@ -91,26 +96,40 @@ gggap <- function(plot,
       tick_width[1],
       trans
     )
+    if (debug)
+      print("plot_bottom, done")
     rel_height <- c(y_heights[1], seg_heights[1])
+    if (debug)
+      print("plot_bottom -> rel_height, done")
 
     if (length(segments) < 2) {
-      print("plot_midd, skipped, only 1 segment")
+      if (debug)
+        print("plot_midd, skipped, only 1 segment")
     } else {
+      print("plot_midd started iterations")
       for (i in 2:length(segments)) {
         gap <- unlist(segments[i])
+        if (debug)
+          print(paste0("plot_midd, i=", i, "gap=", gap))
         p_segment <- plot_midd(
-        plot,
-        i,
-        ascending_ylim,
-        ylim[1],
+          plot,
+          i,
+          ascending_ylim,
+          ylim[1],
           gap[1], # gap[1]?
-        tick_width[i],
-        segments,
-        trans,
-        p_segment
-      )
-      rel_height <- c(rel_height, y_heights[i], seg_heights[i])
-    }
+          tick_width[i],
+          segments,
+          trans,
+          p_segment
+        )
+        if (debug)
+          print(paste("plot_midd, i=", i, "DONE"))
+        rel_height <- c(rel_height, y_heights[i], seg_heights[i])
+        if (debug)
+          print(paste("plot_midd -> rel_height i=", i, "DONE"))
+      }
+      if (debug)
+        print("plot_midd, done iterating")
     }
 
     p_segment <- plot_top(
@@ -129,10 +148,20 @@ gggap <- function(plot,
     # segments are produced in reverse ordering
     p_segment   <- rev(p_segment)
     # `rel_heights` could be missing? really?
+    if (debug) {
+      print("rel_heights")
+      print(rel_heights)
+      print("rel_height")
+      print(rel_height)
+    }
     if (missing(rel_heights)) {
       rel_heights <- rev(rel_height)
     } else {
       rel_heights <- rev(rel_heights)
+    }
+    if (debug) {
+      print("rel_heights now")
+      print(rel_heights)
     }
 
     angle <- get_plot_angle(plot)
@@ -162,10 +191,18 @@ gggap <- function(plot,
 
 plot_top <- function(plot, i, ascending_ylim, ylim, gap, tick_width,
                      segments, trans, p_segment) {
+  if (debug) {
+    print("plot_top")
+    print(paste0("ylim=", ylim, ", gap=", gap, ", tick_width=", tick_width))
+  }
   if (ascending_ylim) {
     breaks <- seq(gap, ylim, by = tick_width)
   } else {
     breaks <- seq(ylim, gap, by = tick_width)
+  }
+  if (debug) {
+    print("breaks")
+    print(breaks)
   }
   p_segment_i <- plot +
   coord_cartesian(ylim = c(gap, ylim)) +
@@ -177,7 +214,7 @@ plot_top <- function(plot, i, ascending_ylim, ylim, gap, tick_width,
     axis.text.x     = element_blank(),
     axis.ticks.x    = element_blank(),
     axis.title.x    = element_blank()
-  ) +
+    ) +
   scale_y_continuous(expand = c(0, 0), breaks = breaks, trans = trans) +
   ylab(label = NULL) +
   labs(caption = NULL)
@@ -188,6 +225,8 @@ plot_top <- function(plot, i, ascending_ylim, ylim, gap, tick_width,
 
 plot_midd <- function(plot, i, ascending_ylim, ylim, gap, tick_width,
                       segments, trans, p_segment) {
+  if (debug)
+    print(paste("Gap here is", gap))
   if (ascending_ylim) {
     breaks <- seq(ylim, gap, by = tick_width)
   } else {
@@ -213,10 +252,18 @@ plot_midd <- function(plot, i, ascending_ylim, ylim, gap, tick_width,
 }
 
 plot_bottom <- function(plot, ascending_ylim, ylim, gap, tick_width, trans) {
+  if (debug) {
+    print("plot_bottom")
+    print(paste0("ylim=", ylim, ", gap=", gap, ", tick_width=", tick_width))
+  }
   if (ascending_ylim) {
     breaks <- seq(ylim, gap, by = tick_width)
   } else {
     breaks <- seq(gap, ylim, by = tick_width)
+  }
+  if (debug) {
+    print("breaks")
+    print(breaks)
   }
   p_segment_i <- plot +
   coord_cartesian(ylim = c(ylim, gap)) +
@@ -226,7 +273,7 @@ plot_bottom <- function(plot, ascending_ylim, ylim, gap, tick_width, trans) {
     axis.line.x.bottom = element_line(),
     plot.title         = element_blank(),
     legend.position    = "none"
-    ) +
+  ) +
   scale_y_continuous(expand = c(0, 0), breaks = breaks, trans = trans) +
   ylab(label = NULL) +
   labs(subtitle = NULL)
@@ -242,11 +289,15 @@ get_validated_ylim <- function(ylim, plot) {
   } else if (ylim[1] == ylim[2]) {
     stop("ylim values must be different")
   } else if (missing(ylim)) {
-    print(paste("ylim is taken from the plot, values", ylim))
+    if (debug)
+      print(paste("ylim is taken from the plot, values", ylim))
     return(plot$coordinates$limits$y)
   } else {
+    if (debug)
+      print(paste("ylim was directly provided, values", ylim))
     return(ylim)
   }
+
 }
 
 segments_ordering_matches_ylim <- function(segments, ascending_ylim) {
@@ -256,32 +307,43 @@ segments_ordering_matches_ylim <- function(segments, ascending_ylim) {
     seg1 <- segments[[j]][1]
     seg2 <- segments[[j]][2]
     if ((seg1 > seg2) & ascending_ylim) {
-        stop(paste0("No.", j, " segment: c(", seg1, ",", seg2,
-                    ") is wrong. It should be ", "c(", seg2, ",", seg1, ")"))
+      if (debug)
+        print("segments_ordered_like_ylim, 1st case")
+      stop(paste0("No.", j, " segment: c(", seg1, ",", seg2,
+                  ") is wrong. It should be ", "c(", seg2, ",", seg1, ")"))
     } else if ((seg1 < seg2) & !ascending_ylim) {
-        stop(paste0("No.", j, " segment: c(", seg1, ",", seg2,
-                    ") is wrong. It should be ", "c(", seg2, ",", seg1, ")"))
+      if (debug)
+        print("segments_ordered_like_ylim, 2nd case")
+      stop(paste0("No.", j, " segment: c(", seg1, ",", seg2,
+                  ") is wrong. It should be ", "c(", seg2, ",", seg1, ")"))
     } else if (seg1 == seg2) {
+      if (debug)
+        print("segments_ordered_like_ylim, default case")
       stop(paste0("No.", j, " segment: c(", seg1, ",", seg2,
                   ") is wrong. They must be different"))
     }
   }
+  if (debug)
+    print("segments_ordered_like_ylim, returning TRUE")
   return(TRUE)
 }
 
 segments_values_ordered_right <- function(segments, ascending_ylim) {
+  if (debug)
+    print("segment_pairs_ordered")
   # the paired sequence of `segments` must follow to the ordering of `ylims`
   if (length(segments) >= 2) {
+    if (debug)
       print("segment_pairs_ordered, ascending_ylim")
-      for (k in 2:length(segments)) {
-        # the second element of the previous segment cannot be larger than
-        # the first element of the current segment
+    for (k in 2:length(segments)) {
+      # the second element of the previous segment cannot be larger than
+      # the first element of the current segment
       if (
         ifelse(
-              ascending,
-              segments[[k - 1]][2] > segments[[k]][1],
-              segments[[k - 1]][2] < segments[[k]][1]
-            )) {
+            ascending,
+            segments[[k - 1]][2] > segments[[k]][1],
+            segments[[k - 1]][2] < segments[[k]][1]
+        )) {
           pre <- paste0("c(", segments[[k - 1]][1], ",", segments[[k - 1]][2],
                         ")")
           suf <- paste0("c(", segments[[k]][1], ",", segments[[k]][2], ")")
@@ -289,14 +351,19 @@ segments_values_ordered_right <- function(segments, ascending_ylim) {
                       " are wrong. They should be ", suf, ",", pre))
         }
       }
+      if (debug)
+        print("segment_pairs_ordered, returning TRUE, 2 or more segments")
       return(TRUE)
   } else {
-      return(TRUE)
-    }
+    if (debug)
+      print("segment_pairs_ordered, returning TRUE, 1 segment")
+    return(TRUE)
   }
+}
 
 segments_within_ylim <- function(segments, ylim, ascending_ylim) {
-  print("segments_within_ylim")
+  if (debug)
+    print("segments_within_ylim")
   if (ascending_ylim) {
     ylim_min <- ylim[1]
     ylim_max <- ylim[2]
@@ -310,14 +377,28 @@ segments_within_ylim <- function(segments, ylim, ascending_ylim) {
   if (max(unlist(segments)) > ylim_max)
     stop("the maximum of segments must be < than maximum of ylim")
 
+  if (debug)
+    print("segments_within_ylim, returning TRUE, seem contained")
   return(TRUE)
 }
 
 compute_tick_width <- function(tick_width, ylim, segments) {
+  if (debug)
+    print("compute_tick_width")
   # `tick_width` must be computed if not specified
   if (missing(tick_width)) {
+    if (debug)
+      print("compute_tick_width, tick_width was missing")
     tick_width <- rep(abs(ylim[2] - ylim[1]) / 10, length(segments) + 1)
   } else {
+    if (debug) {
+      print("compute_tick_width, tick_width was NOT missing")
+      print(paste(
+        "tick_width=", tick_width,
+        "length(tick_width)=", length(tick_width),
+        "length(segments)=", length(segments)
+      ))
+    }
     # `tick_width` must have 1 more element than `segments`
     if ((length(tick_width) - length(segments)) < 1) {
       int_len <- length(tick_width)
@@ -330,9 +411,13 @@ compute_tick_width <- function(tick_width, ylim, segments) {
 }
 
 compute_seg_heights <- function(segments) {
+  if (debug)
+    print("compute_seg_heights")
   # `seg_heights` cannot have less elements than `segments`
   seg_heights <- 0
   if (length(seg_heights) < length(segments)) {
+    if (debug)
+      print("compute_seg_heights, more segments than heights")
     seg_heights_len <- length(seg_heights)
     for (m in (seg_heights_len + 1):length(segments)) {
       seg_heights[m] <- seg_heights[seg_heights_len]
@@ -342,29 +427,48 @@ compute_seg_heights <- function(segments) {
 }
 
 compute_y_heights <- function(segments) {
+  if (debug)
+    print("compute_y_heights")
   # `y_heights` cannot have less elements than `segments`+1
   y_heights <- 1
   if (length(y_heights) < (length(segments) + 1)) {
+    if (debug)
+      print("compute_y_heights, length(y_heights) < (length(segments) + 1)")
     y_heights_len <- length(y_heights)
+    if (debug)
+      print(paste(y_heights_len + 1, length(segments) + 1))
     for (m in (y_heights_len + 1):(length(segments) + 1)) {
       y_heights[m] <- y_heights[y_heights_len]
     }
   }
+  if (debug)
+    print(y_heights)
   return(y_heights)
 }
 
 get_desired_transform <- function(plot) {
   # identity is the default transformation
   if (length(plot$scales$scales) == 0) {
+    if (debug)
+      print("The desired transform is identity, 1st case")
     return("identity")
   } else if ("trans" %in% names(plot$scales$scales[[1]])) {
+    if (debug) {
+      print(paste(
+            "The desired transform was read from the plot",
+            plot$scales$scales[[1]]$trans))
+    }
     return(plot$scales$scales[[1]]$trans)
   } else {
+    if (debug)
+      print("The desired transform is identity, default")
     return("identity")
   }
 }
 
 desired_transform_valid <- function(trans, ascending_ylim, ylim) {
+  if (debug)
+    print("desired_transform_valid")
   # `ylim` cannot be in ascending order if reverse transform is desired
   if ("reverse" %in% trans) {
     if (ascending_ylim) {
@@ -379,6 +483,8 @@ desired_transform_valid <- function(trans, ascending_ylim, ylim) {
                   " is wrong. It should be ", "c(", ylim[2], ",", ylim[1], ")"))
     }
   }
+  if (debug)
+    print("Yes, SEEMS valid")
   return(TRUE)
 }
 
