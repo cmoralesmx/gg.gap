@@ -1,6 +1,6 @@
 Package: gggap
 Type: Package
-Title: Streamlined Creation Of Segments On The Y-axis Of 'ggplot2' Plots
+Title: Streamlined Creation of Segments on the Y-Axis of 'ggplot2' Plots
 Version: 1.0.1
 Authors@R: c(
     person("Carlos", "Morales", role=c("aut", "cre"), email = "carlosmorales777@gmail.com"),
@@ -9,11 +9,11 @@ Authors@R: c(
     person("Yizhu", "Lvy", role = "aut"),
     person("Zhi", "Jin", role = "aut")
     )
-Description: The package provides the function gggap() for streamlining the
-    creation of segments on the y-axis of ggplot2 plots which is otherwise
-    not a trivial task to accomplish.
+Description: The function gggap() streamlines the creation of segments on
+    the y-axis of ggplot2 plots which is otherwise not a trivial task to
+    accomplish.
 Imports: ggplot2, cowplot, grid
-License: GPL-3 + file LICENSE
+License: GPL-3
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.1
