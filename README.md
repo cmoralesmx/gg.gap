@@ -1,6 +1,6 @@
 # gggap
 
-Easily create segments in the y-axis of a 'ggplot2' plot.  
+Streamlined creation of segments on the y-axis of 'ggplot2' plots  
 
 This project builds on top of [gg.gap v1.4](https://github.com/ChrisLou-bioinfo/gg.gap) by Jiacheng Lou, et al.  
 
@@ -9,6 +9,11 @@ What changed with respect to upstream?
 - Legends are now supported by the core functionality.  
 - The code was heavily refactored following the [tidyverse style guide](https://style.tidyverse.org/) and Clean Code principles.  
 - The project has a new name after lossing the punctuation mark from the former name as per the recommendations of the style guide.  
+
+Future work:  
+- Support the creation of gaps on the x-axis  
+- Introduce testing  
+- Revise the examples provided  
 
 [![CRAN RStudio mirror
 downloads](http://cranlogs.r-pkg.org/badges/gggap)](http://www.r-pkg.org/pkg/gggap)
