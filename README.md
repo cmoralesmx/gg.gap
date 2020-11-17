@@ -15,8 +15,7 @@ Future work:
 - Introduce testing  
 - Revise the examples provided  
 
-[![CRAN RStudio mirror
-downloads](http://cranlogs.r-pkg.org/badges/gggap)](http://www.r-pkg.org/pkg/gggap)
+[![](https://cranlogs.r-pkg.org/badges/gggap?color=orange)](https://cran.r-project.org/package=gggap)
 
 ## Installation
 

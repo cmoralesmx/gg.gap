@@ -10,7 +10,7 @@ Authors@R: c(
     person("Zhi", "Jin", role = "aut")
     )
 Description: The function gggap() streamlines the creation of segments on
-    the y-axis of ggplot2 plots which is otherwise not a trivial task to
+    the y-axis of 'ggplot2' plots which is otherwise not a trivial task to
     accomplish.
 Imports: ggplot2, cowplot, grid
 License: GPL-3
